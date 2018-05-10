@@ -10,8 +10,8 @@ RUN apt-get install --yes --force-yes build-essential curl software-properties-c
 
 # Install golang
 RUN sudo add-apt-repository ppa:gophers/archive
-RUN sudo apt-get update
-RUN sudo apt-get install golang-1.10-go
+RUN sudo apt-get update --yes
+RUN sudo apt-get install --yes golang-1.10-go
 
 ADD . /app/src/cron/
 RUN go version
