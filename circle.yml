@@ -14,9 +14,9 @@ stages:
           docker pull ubuntu:14.04
           export file="Dockerrun.aws.json"
           export tag="master-${CIRCLE_BUILD_NUM}"
-          export repo="275828782348.dkr.ecr.us-east-2.amazonaws.com/chomp"
+          export repo="275828782348.dkr.ecr.us-east-2.amazonaws.com/cron"
           export s3Bucket="staffjoy-bullhorn-deploy"
-          export s3Path="chomp/$tag/"
+          export s3Path="cron/$tag/"
           export s3Key="$s3Path$file"
 
           # Add version
@@ -36,7 +36,7 @@ stages:
 
           # Create version
           aws elasticbeanstalk create-application-version \
-              --application-name staffjoy-chomp \
+              --application-name staffjoy-cron \
               --version-label "$tag" \
               --source-bundle "{\"S3Bucket\":\"$s3Bucket\",\"S3Key\":\"$s3Key\"}" 
 
@@ -46,7 +46,7 @@ stages:
 
           # Deploy to stage
           aws elasticbeanstalk update-environment \
-              --environment-name "bullhorn-chomp" \
+              --environment-name "bullhorn-cron" \
               --version-label "$tag"
 
           # Polling to see whether deploy is done
@@ -62,8 +62,8 @@ stages:
               fi
 
               # See what's deployed
-              version=`aws elasticbeanstalk describe-environments --application-name "staffjoy-chomp" --environment-name "bullhorn-chomp" --query "Environments[*].VersionLabel" --output text`
-              status=`aws elasticbeanstalk describe-environments --application-name "staffjoy-chomp" --environment-name "bullhorn-chomp" --query "Environments[*].Status" --output text`
+              version=`aws elasticbeanstalk describe-environments --application-name "staffjoy-cron" --environment-name "bullhorn-cron" --query "Environments[*].VersionLabel" --output text`
+              status=`aws elasticbeanstalk describe-environments --application-name "staffjoy-cron" --environment-name "bullhorn-cron" --query "Environments[*].Status" --output text`
 
               if [ "$version" != "$tag" ]; then
                   echo "Tag not updated (currently $version). Waiting."

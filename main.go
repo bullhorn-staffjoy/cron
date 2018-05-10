@@ -14,8 +14,8 @@ import (
 const (
 	sleep                        = 40 // seconds
 	consecutiveFailuresThreshold = 4
-	papertrailPort               = 12345
-	papertrailServer             = "logs1"
+	papertrailPort               = 33908
+	papertrailServer             = "logs5.papertrailapp.com"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 
 	case "prod":
 		apiKey = os.Getenv("API_KEY")
-		url = "https://suite.staffjoy.com"
+		url = "https://suite.bhstaffjoy.com"
 		logger = log.New(
 			&papertrail.Writer{
 				Port:    papertrailPort,

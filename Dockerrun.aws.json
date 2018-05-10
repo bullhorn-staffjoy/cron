@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "275828782348.dkr.ecr.us-east-2.amazonaws.com/chomp:TAG",
+    "Name": "275828782348.dkr.ecr.us-east-2.amazonaws.com/cron:TAG",
     "Update": "true"
   },
   "Ports": [
