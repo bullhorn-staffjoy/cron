@@ -1,0 +1,80 @@
+version: 2
+executorType: machine
+stages:
+  build:
+    steps:
+      - type: checkout
+      - type: shell
+        shell: /bin/bash
+        command: |
+          sudo apt-get update --yes
+          sudo apt-get install --yes wget pkg-config software-properties-common gcc libmysqlclient-dev python-software-properties python-mysqldb libmysqlclient-dev libffi-dev libssl-dev python-dev build-essential python python-setuptools curl python-pip libssl-dev
+          npm install -g less
+          
+          docker pull ubuntu:14.04
+          export file="Dockerrun.aws.json"
+          export tag="master-${CIRCLE_BUILD_NUM}"
+          export repo="275828782348.dkr.ecr.us-east-2.amazonaws.com/chomp"
+          export s3Bucket="staffjoy-bullhorn-deploy"
+          export s3Path="chomp/$tag/"
+          export s3Key="$s3Path$file"
+
+          # Add version
+          sed -i "s/TAG/$tag/" $file
+
+          aws ecr get-login --no-include-email --region us-east-2 | sh
+
+          docker build -t $tag -t $repo:$tag .
+
+          # Run tests (but not all becuase we don't have db and redis going yet)
+          # docker run -t $repo:$tag /bin/bash -c 'cd /src/ && make fmt-test && make py-lint'
+
+          docker push $repo:$tag
+
+          # Add the Dockerrun to S3 so that beanstalk can access it
+          aws s3 cp $file s3://$s3Bucket/$s3Path
+
+          # Create version
+          aws elasticbeanstalk create-application-version \
+              --application-name staffjoy-chomp \
+              --version-label "$tag" \
+              --source-bundle "{\"S3Bucket\":\"$s3Bucket\",\"S3Key\":\"$s3Key\"}" 
+
+          # Note: AWS limits the number of application versions. if you hit an error here, we just manually clean up. 
+          # Ideally, you would maybe delete old versions.
+
+
+          # Deploy to stage
+          aws elasticbeanstalk update-environment \
+              --environment-name "bullhorn-chomp" \
+              --version-label "$tag"
+
+          # Polling to see whether deploy is done
+          deploystart=$(date +%s)
+          timeout=3000 # Seconds to wait before error
+          threshhold=$((deploystart + timeout))
+          while true; do
+              # Check for timeout
+              timenow=$(date +%s)
+              if [[ "$timenow" > "$threshhold" ]]; then
+                  echo "Timeout - $timeout seconds elapsed"
+                  exit 1
+              fi
+
+              # See what's deployed
+              version=`aws elasticbeanstalk describe-environments --application-name "staffjoy-chomp" --environment-name "bullhorn-chomp" --query "Environments[*].VersionLabel" --output text`
+              status=`aws elasticbeanstalk describe-environments --application-name "staffjoy-chomp" --environment-name "bullhorn-chomp" --query "Environments[*].Status" --output text`
+
+              if [ "$version" != "$tag" ]; then
+                  echo "Tag not updated (currently $version). Waiting."
+                  sleep 10
+                  continue
+              fi
+              if [ "$status" != "Ready" ]; then
+                  echo "System not Ready -it's $status. Waiting."
+                  sleep 10
+                  continue
+              fi
+              break
+          done
+          echo "deployed!"
