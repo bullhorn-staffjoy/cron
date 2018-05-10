@@ -9,13 +9,12 @@ RUN apt-get update --yes --force-yes
 RUN apt-get install --yes --force-yes build-essential curl software-properties-common apt-transport-https ca-certificates
 
 # Install golang
-RUN curl -O https://storage.googleapis.com/golang/go1.9.3.linux-amd64.tar.gz
-RUN tar -xvf go1.9.3.linux-amd64.tar.gz
-RUN sudo chown -R root:root ./go
-RUN sudo mv go /usr/local
+RUN sudo add-apt-repository ppa:gophers/archive
+RUN sudo apt-get update
+RUN sudo apt-get install golang-1.10-go
 
 ADD . /app/src/cron/
-RUN sudo /usr/local/go version
-RUN sudo /usr/local/go install cron
+RUN go version
+RUN go install cron
 
-CMD ["sudo", "/app/bin/cron"]
+CMD ["/app/bin/cron"]
