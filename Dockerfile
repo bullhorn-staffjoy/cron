@@ -9,9 +9,10 @@ RUN apt-get update --yes --force-yes
 RUN apt-get install --yes --force-yes build-essential curl software-properties-common apt-transport-https ca-certificates
 
 # Install golang
-RUN add-apt-repository ppa:ubuntu-lxc/lxd-stable
-RUN sudo apt-get update
-RUN apt-get install --yes --force-yes golang
+RUN curl -O https://storage.googleapis.com/golang/go1.9.3.linux-amd64.tar.gz
+RUN tar -xvf go1.9.3.linux-amd64.tar.gz
+RUN sudo chown -R root:root ./go
+RUN sudo mv go /usr/local
 
 ADD . /app/src/cron/
 RUN go version
