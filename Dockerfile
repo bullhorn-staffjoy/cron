@@ -15,7 +15,7 @@ RUN sudo chown -R root:root ./go
 RUN sudo mv go /usr/local
 
 ADD . /app/src/cron/
-RUN go version
-RUN go install cron
+RUN /usr/local/go version
+RUN /usr/local/go install cron
 
 CMD ["/app/bin/cron"]
